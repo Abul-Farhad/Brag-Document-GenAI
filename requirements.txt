@@ -1,0 +1,12 @@
+langchain
+langchain-core
+langchain-community
+langgraph
+python-dotenv
+langchain-groq
+pydantic
+langchain-openai
+openai
+typing_extensions
+langchain-text-splitters
+openpyxl
