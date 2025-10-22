@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="document-view">
+    <div class="document-header">
+        <h2>{{ document.employee_name }} - {{ document.month }}</h2>
+        <a href="/export/{{ document.id }}/" class="btn-primary">Export as Markdown</a>
+    </div>
+    
+    <section>
+        <h3>WORK ACCOMPLISHMENTS</h3>
+        
+        <h4>Goals of this Quarter:</h4>
+        <ul>
+            {% for item in document.work_accomplishments.goals_of_this_quarter %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        
+        <h4>Goals of this Month:</h4>
+        <ul>
+            {% for item in document.work_accomplishments.goals_of_this_month %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        
+        <h4>Official Project Accomplishments:</h4>
+        <ul>
+            {% for item in document.work_accomplishments.official_project_accomplishments %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        
+        <h4>Personal Project Accomplishments:</h4>
+        <ul>
+            {% for item in document.work_accomplishments.personal_project_accomplishments %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        
+        <h4>Personal Reflection:</h4>
+        <h5>What I am Most Proud Of:</h5>
+        <ul>
+            {% for item in document.work_accomplishments.personal_reflection.what_i_am_most_proud_of %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        
+        <h5>Areas I am Focused On For Growth:</h5>
+        <ul>
+            {% for item in document.work_accomplishments.personal_reflection.areas_i_am_focused_on_for_growth %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+    
+    <section>
+        <h3>LEARNING</h3>
+        <ul>
+            {% for item in document.learning %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+    
+    <section>
+        <h3>UTILIZED SKILLS</h3>
+        <ul>
+            {% for item in document.utilized_skills %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Document History</h2>
+
+<div class="history-list">
+    {% if documents %}
+        {% for doc in documents %}
+        <div class="history-item">
+            <h3>{{ doc.employee_name }}</h3>
+            <p><strong>Month:</strong> {{ doc.month }}</p>
+            <p><strong>Generated:</strong> {{ doc.generated_at|date:"Y-m-d H:i" }}</p>
+            <div class="actions">
+                <a href="/document/{{ doc.id }}/" class="btn-secondary">View</a>
+                <a href="/export/{{ doc.id }}/" class="btn-secondary">Export MD</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No documents generated yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

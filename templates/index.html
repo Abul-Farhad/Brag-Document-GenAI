@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Generate Brag Document</h2>
+    <form id="bragForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="employee_name">Employee Name:</label>
+            <input type="text" id="employee_name" name="employee_name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="month">Month:</label>
+            <input type="text" id="month" name="month" placeholder="e.g., September" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="excel_file">Excel File:</label>
+            <input type="file" id="excel_file" name="excel_file" accept=".xlsx,.xls" required>
+        </div>
+        
+        <button type="submit" class="btn-primary">Generate Document</button>
+    </form>
+    
+    <div id="loading" style="display:none;">
+        <p>Generating brag document... Please wait.</p>
+    </div>
+    
+    <div id="result" style="display:none;">
+        <h3>Generated Successfully!</h3>
+        <a id="viewLink" class="btn-secondary">View Document</a>
+    </div>
+    
+    <div id="error" style="display:none;" class="error-message"></div>
+</div>
+
+<script>
+document.getElementById('bragForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const loading = document.getElementById('loading');
+    const result = document.getElementById('result');
+    const error = document.getElementById('error');
+    
+    loading.style.display = 'block';
+    result.style.display = 'none';
+    error.style.display = 'none';
+    
+    try {
+        const response = await fetch('/generate/', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            loading.style.display = 'none';
+            result.style.display = 'block';
+            document.getElementById('viewLink').href = `/document/${data.id}/`;
+        } else {
+            throw new Error(data.error || 'Generation failed');
+        }
+    } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.textContent = err.message;
+    }
+});
+</script>
+{% endblock %}
