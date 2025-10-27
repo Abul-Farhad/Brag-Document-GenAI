@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-j8npqydbf5=b+a98(@3f1&_8t4r@w9f&67hg2y2-k+*wj9hqwq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['unsolemnified-yuonne-prophesiable.ngrok-free.dev']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -41,8 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
     'brag_generator',
+    'corsheaders',
+    'authentication',
 ]
 
 MIDDLEWARE = [
@@ -81,8 +82,12 @@ WSGI_APPLICATION = 'brag_document_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'brag_document'),
+        'USER': os.getenv('DB_USER', 'brag_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'brag_password'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -138,3 +143,5 @@ GEMINI_API_BASE_URL = os.getenv('GEMINI_API_BASE_URL')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'authentication.CustomUser'

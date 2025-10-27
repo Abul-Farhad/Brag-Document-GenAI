@@ -8,3 +8,7 @@ db.sqlite3
 media/
 static/admin/
 *.log
+.kiro/
+.vscode/
+*.xml
+.gitignore

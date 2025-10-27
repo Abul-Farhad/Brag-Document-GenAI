@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: brag_document_db
+    environment:
+      POSTGRES_DB: brag_document
+      POSTGRES_USER: brag_user
+      POSTGRES_PASSWORD: brag_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

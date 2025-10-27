@@ -2,16 +2,19 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
+from django.contrib.auth.decorators import login_required
 from .models import BragDocument
 from .utils import extract_employee_data, generate_brag_document
 import os
 import json
 
+@login_required(login_url='/auth/signin/')
 def index(request):
     return render(request, 'index.html')
 
+@login_required(login_url='/auth/signin/')
 def history(request):
-    documents = BragDocument.objects.all()
+    documents = BragDocument.objects.filter(user=request.user)
     return render(request, 'history.html', {'documents': documents})
 
 @csrf_exempt
@@ -37,6 +40,7 @@ def generate(request):
             result = generate_brag_document(employee_data)
             
             brag_doc = BragDocument.objects.create(
+                user=request.user,
                 employee_name=employee_name,
                 month=month,
                 work_accomplishments=result.work_accomplishments.dict(),
@@ -61,16 +65,18 @@ def generate(request):
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
+@login_required(login_url='/auth/signin/')
 def view_document(request, doc_id):
     try:
-        doc = BragDocument.objects.get(id=doc_id)
+        doc = BragDocument.objects.get(id=doc_id, user=request.user)
         return render(request, 'view_document.html', {'document': doc})
     except BragDocument.DoesNotExist:
         return HttpResponse('Document not found', status=404)
 
+@login_required(login_url='/auth/signin/')
 def export_markdown(request, doc_id):
     try:
-        doc = BragDocument.objects.get(id=doc_id)
+        doc = BragDocument.objects.get(id=doc_id, user=request.user)
         
         markdown = f"# Brag Document - {doc.employee_name} ({doc.month})\n\n"
         markdown += "## WORK ACCOMPLISHMENTS\n\n"

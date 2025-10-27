@@ -1,9 +1,8 @@
-Django>=4.2,<5.0
+Django>=4.2
 langchain
 python-dotenv
 pydantic
 langchain-openai
 openpyxl
 django-cors-headers
-celery
-redis
+psycopg2-binary

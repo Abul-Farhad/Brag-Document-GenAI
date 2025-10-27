@@ -7,19 +7,51 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <nav>
+    {% if user.is_authenticated %}
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Brag Doc</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Home</span>
+                </a>
+                <a href="/history/" class="nav-item">
+                    <span class="icon">📚</span>
+                    <span>History</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="profile">
+                    <div class="profile-avatar">{{ user.username|slice:":1"|upper }}</div>
+                    <div class="profile-info">
+                        <div class="profile-name">{{ user.username }}</div>
+                        <div class="profile-email">{{ user.email }}</div>
+                    </div>
+                </div>
+                <a href="/auth/signout/" class="btn-signout">Sign Out</a>
+            </div>
+        </aside>
+        <main class="main-content">
+    {% else %}
+    <nav class="top-nav">
         <div class="container">
             <h1>Brag Document Generator</h1>
             <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/history/">History</a></li>
+                <li><a href="/auth/signin/">Sign In</a></li>
+                <li><a href="/auth/signup/">Sign Up</a></li>
             </ul>
         </div>
     </nav>
-    
     <main class="container">
+    {% endif %}
         {% block content %}{% endblock %}
     </main>
+    {% if user.is_authenticated %}
+    </div>
+    {% endif %}
     
     <footer>
         <p>&copy; 2025 Brag Document Generator</p>
