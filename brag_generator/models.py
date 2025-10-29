@@ -7,9 +7,9 @@ class BragDocument(models.Model):
     month = models.CharField(max_length=50)
     generated_at = models.DateTimeField(auto_now_add=True)
     
-    work_accomplishments = models.JSONField()
-    learning = models.JSONField()
-    utilized_skills = models.JSONField()
+    work_accomplishments = models.JSONField(default=dict)
+    learning = models.JSONField(default=list)
+    utilized_skills = models.JSONField(default=list)
     
     class Meta:
         ordering = ['-generated_at']

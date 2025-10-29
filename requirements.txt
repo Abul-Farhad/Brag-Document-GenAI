@@ -3,6 +3,8 @@ langchain
 python-dotenv
 pydantic
 langchain-openai
+langchain-groq
 openpyxl
 django-cors-headers
 psycopg2-binary
+requests

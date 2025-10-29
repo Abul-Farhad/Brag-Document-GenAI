@@ -3,19 +3,63 @@
 <div class="form-container">
     <h2>Generate Brag Document</h2>
     <form id="bragForm" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="employee_name">Employee Name:</label>
-            <input type="text" id="employee_name" name="employee_name" required>
-        </div>
+        {% csrf_token %}
         
-        <div class="form-group">
-            <label for="month">Month:</label>
-            <input type="text" id="month" name="month" placeholder="e.g., September" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="excel_file">Excel File:</label>
-            <input type="file" id="excel_file" name="excel_file" accept=".xlsx,.xls" required>
+        <div class="form-columns">
+            <div class="form-column">
+                <div class="form-group">
+                    <label for="employee_name">Employee Name:</label>
+                    <input type="text" id="employee_name" name="employee_name" placeholder="e.g. John Doe" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="month">Month:</label>
+                    <select id="month" name="month" required>
+                        <option value="">Select Month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="llm_provider">LLM Provider:</label>
+                    <select id="llm_provider" name="llm_provider" required>
+                        <option value="">Select Provider</option>
+                        <option value="gemini">Gemini</option>
+                        <option value="groq">Groq</option>
+                        <option value="ollama">Ollama</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-column">
+                <div class="form-group">
+                    <label for="model">Model:</label>
+                    <select id="model" name="model" required disabled>
+                        <option value="">Select a provider first</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="api_key">API Key:</label>
+                    <input type="password" id="api_key" name="api_key" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="excel_file">Excel File:</label>
+                    <input type="file" id="excel_file" name="excel_file" accept=".xlsx,.xls" required>
+                </div>
+            </div>
         </div>
         
         <button type="submit" class="btn-primary">Generate Document</button>
@@ -34,10 +78,110 @@
 </div>
 
 <script>
+
+// Handle LLM provider change and load models
+document.getElementById('llm_provider').addEventListener('change', async (e) => {
+    const provider = e.target.value;
+    const apiKeyInput = document.getElementById('api_key');
+    const modelSelect = document.getElementById('model');
+    
+    if (!provider) {
+        modelSelect.disabled = true;
+        modelSelect.innerHTML = '<option value="">Select a provider first</option>';
+        return;
+    }
+    
+    if (!apiKeyInput.value) {
+        modelSelect.disabled = true;
+        modelSelect.innerHTML = '<option value="">Enter API key first</option>';
+        return;
+    }
+    
+    await loadModels(provider, apiKeyInput.value);
+});
+
+// Handle API key change
+document.getElementById('api_key').addEventListener('input', async (e) => {
+    const provider = document.getElementById('llm_provider').value;
+    const apiKey = e.target.value;
+    
+    if (provider && apiKey) {
+        await loadModels(provider, apiKey);
+    }
+});
+
+async function loadModels(provider, apiKey) {
+    const modelSelect = document.getElementById('model');
+    
+    try {
+        modelSelect.disabled = true;
+        modelSelect.innerHTML = '<option value="">Loading models...</option>';
+        
+        const response = await fetch('/get-models/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                provider: provider,
+                api_key: apiKey
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            modelSelect.innerHTML = '<option value="">Select Model</option>';
+            data.models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = model.name;
+                modelSelect.appendChild(option);
+            });
+            modelSelect.disabled = false;
+        } else {
+            throw new Error(data.error || 'Failed to load models');
+        }
+    } catch (err) {
+        modelSelect.innerHTML = '<option value="">Error loading models</option>';
+        console.error('Error loading models:', err);
+    }
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    // Fallback: try to get from meta tag or hidden input
+    if (!cookieValue) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) {
+            cookieValue = csrfMeta.getAttribute('content');
+        } else {
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) {
+                cookieValue = csrfInput.value;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.getElementById('bragForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = new FormData(e.target);
+    
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
     const error = document.getElementById('error');
@@ -47,6 +191,9 @@ document.getElementById('bragForm').addEventListener('submit', async (e) => {
     error.style.display = 'none';
     
     try {
+        // Add CSRF token to FormData
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+        
         const response = await fetch('/generate/', {
             method: 'POST',
             body: formData

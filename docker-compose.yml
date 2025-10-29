@@ -1,7 +1,8 @@
+version: '3.8'
+
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: brag_document_db
+    image: postgres:15
     environment:
       POSTGRES_DB: brag_document
       POSTGRES_USER: brag_user

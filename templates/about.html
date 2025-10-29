@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}About - Brag Document Generator{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <h2>About Brag Document Generator</h2>
+    
+    <div class="about-section">
+        <h3>What is a Brag Document?</h3>
+        <p>A brag document is a comprehensive record of your professional accomplishments, learning experiences, and skills utilized over a specific period. It serves as a valuable tool for performance reviews, career development discussions, and personal reflection.</p>
+    </div>
+    
+    <div class="about-section">
+        <h3>How It Works</h3>
+        <ol>
+            <li><strong>Upload Your Data:</strong> Upload an Excel file containing your daily scrum reports or work logs</li>
+            <li><strong>AI Processing:</strong> Our AI analyzes your data using advanced language models (Gemini or Groq)</li>
+            <li><strong>Structured Output:</strong> Get a professionally formatted brag document with organized sections</li>
+            <li><strong>Export & Share:</strong> Download as Markdown or view online for easy sharing</li>
+        </ol>
+    </div>
+    
+    <div class="about-section">
+        <h3>Document Structure</h3>
+        <p>Each generated brag document includes:</p>
+        <ul>
+            <li><strong>Work Accomplishments:</strong> Goals achieved, project milestones, and personal reflections</li>
+            <li><strong>Learning:</strong> New skills acquired, technologies learned, and knowledge gained</li>
+            <li><strong>Utilized Skills:</strong> Technical and soft skills demonstrated during the period</li>
+        </ul>
+    </div>
+    
+    <div class="about-section">
+        <h3>Technology Stack</h3>
+        <p>Built with modern technologies for reliability and performance:</p>
+        <ul>
+            <li><strong>Backend:</strong> Django 5.2 with Python</li>
+            <li><strong>AI Integration:</strong> LangChain with Gemini and Groq APIs</li>
+            <li><strong>Database:</strong> PostgreSQL</li>
+            <li><strong>Frontend:</strong> Responsive HTML/CSS/JavaScript</li>
+        </ul>
+    </div>
+    
+    <div class="about-section">
+        <h3>Privacy & Security</h3>
+        <p>Your data privacy is our priority:</p>
+        <ul>
+            <li>Uploaded files are processed temporarily and automatically deleted</li>
+            <li>Generated documents are stored securely and only accessible to you</li>
+            <li>API keys are used only for document generation and not stored</li>
+            <!-- <li>All communications are protected with CSRF tokens and secure headers</li> -->
+        </ul>
+    </div>
+    
+    {% if not user.is_authenticated %}
+    <div class="about-cta">
+        <h3>Get Started</h3>
+        <p>Ready to create your first brag document?</p>
+        <div class="cta-buttons">
+            <a href="/auth/signup/" class="btn-primary">Sign Up</a>
+            <a href="/auth/signin/" class="btn-secondary">Sign In</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

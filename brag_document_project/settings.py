@@ -57,6 +57,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Trust proxy headers for ngrok
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
 ROOT_URLCONF = 'brag_document_project.urls'
 
 TEMPLATES = [
@@ -116,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Dhaka'
 
 USE_I18N = True
 
@@ -135,6 +139,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # CORS Settings
 CORS_ALLOW_ALL_ORIGINS = True
 
+# CSRF Settings for ngrok
+CSRF_TRUSTED_ORIGINS = [
+    'https://unsolemnified-yuonne-prophesiable.ngrok-free.dev'
+    # 'http://localhost:8000',
+    # 'http://127.0.0.1:8000',
+]
+
+# Allow ngrok domains
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'
+
 # Gemini API Configuration
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 GEMINI_API_BASE_URL = os.getenv('GEMINI_API_BASE_URL')
@@ -145,3 +160,6 @@ GEMINI_API_BASE_URL = os.getenv('GEMINI_API_BASE_URL')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
+
+
+

@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+
 from django.core.files.storage import default_storage
 from django.contrib.auth.decorators import login_required
 from .models import BragDocument
-from .utils import extract_employee_data, generate_brag_document
+from .utils import extract_employee_data, generate_brag_document, get_available_models
 import os
 import json
 
@@ -12,23 +12,48 @@ import json
 def index(request):
     return render(request, 'index.html')
 
+def about(request):
+    return render(request, 'about.html')
+
 @login_required(login_url='/auth/signin/')
 def history(request):
     documents = BragDocument.objects.filter(user=request.user)
     return render(request, 'history.html', {'documents': documents})
 
-@csrf_exempt
+@login_required(login_url='/auth/signin/')
+def get_models(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            provider = data.get('provider')
+            api_key = data.get('api_key')
+            print("Provider: ", provider)
+            if not provider or not api_key:
+                return JsonResponse({'error': 'Provider and API key are required'}, status=400)
+            
+            models = get_available_models(provider, api_key)
+            return JsonResponse({'models': models})
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@login_required(login_url='/auth/signin/')
 def generate(request):
     if request.method == 'POST':
         file_path = None
         try:
             employee_name = request.POST.get('employee_name')
             month = request.POST.get('month')
+            llm_provider = request.POST.get('llm_provider')
+            api_key = request.POST.get('api_key')
+            model = request.POST.get('model')
             excel_file = request.FILES.get('excel_file')
             
-            if not all([employee_name, month, excel_file]):
+            if not all([employee_name, month, llm_provider, api_key, model, excel_file]):
                 return JsonResponse({'error': 'Missing required fields'}, status=400)
-            print("default storage: ", default_storage)
+            
             file_path = default_storage.save(f'temp/{excel_file.name}', excel_file)
             full_path = default_storage.path(file_path)
             
@@ -37,7 +62,7 @@ def generate(request):
             if not employee_data:
                 return JsonResponse({'error': 'No data found for the specified employee and month'}, status=404)
             
-            result = generate_brag_document(employee_data)
+            result = generate_brag_document(employee_data, llm_provider, api_key, model)
             
             brag_doc = BragDocument.objects.create(
                 user=request.user,
@@ -72,6 +97,19 @@ def view_document(request, doc_id):
         return render(request, 'view_document.html', {'document': doc})
     except BragDocument.DoesNotExist:
         return HttpResponse('Document not found', status=404)
+
+
+
+@login_required(login_url='/auth/signin/')
+def delete_document(request, doc_id):
+    if request.method == 'POST':
+        try:
+            doc = BragDocument.objects.get(id=doc_id, user=request.user)
+            doc.delete()
+            return JsonResponse({'success': True, 'message': 'Document deleted successfully'})
+        except BragDocument.DoesNotExist:
+            return JsonResponse({'error': 'Document not found'}, status=404)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 @login_required(login_url='/auth/signin/')
 def export_markdown(request, doc_id):

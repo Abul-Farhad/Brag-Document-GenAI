@@ -1,9 +1,14 @@
 import openpyxl
+import requests
 from typing import List
 from pydantic import BaseModel
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from django.conf import settings
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 class PersonalReflection(BaseModel):
     what_i_am_most_proud_of: List[str]
@@ -48,13 +53,99 @@ def extract_employee_data(file_path: str, employee_name: str, month: str, column
     except Exception as e:
         raise Exception(f"Error extracting data: {str(e)}")
 
-def generate_brag_document(employee_data: List[str]) -> EmployeeInfo:
+def get_available_models(provider: str, api_key: str) -> List[dict]:
+    """Get available models for the specified provider"""
+    try:
+        if provider == 'gemini':
+            # Gemini API models endpoint
+            url = "https://generativelanguage.googleapis.com/v1beta/models"
+            headers = {"x-goog-api-key": api_key}
+            
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            models = []
+            
+            for model in data.get('models', []):
+                if 'generateContent' in model.get('supportedGenerationMethods', []):
+                    model_id = model['name'].split('/')[-1]
+                    models.append({
+                        'id': model_id,
+                        'name': model.get('displayName', model_id)
+                    })
+            
+            return models
+            
+        elif provider == 'groq':
+            # Groq API models endpoint
+            url = "https://api.groq.com/openai/v1/models"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            models = []
+            print("groq response models data: \n", data)
+            for model in data.get('data', []):
+                models.append({
+                    'id': model['id'],
+                    'name': model['id']
+                })
+            
+            return models
+        
+        elif provider == 'ollama':
+            url = "http://localhost:11434/api/tags"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            print("ollama response models data: \n", data)
+            models = []
+            
+            for model in data.get('models', []):
+                models.append({
+                    'id': model['model'],
+                    'name': model['name']
+                })
+            
+            return models
+
+            
+        else:
+            raise ValueError(f"Unsupported provider: {provider}")
+            
+    except Exception as e:
+        raise Exception(f"Error fetching models for {provider}: {str(e)}")
+
+def generate_brag_document(employee_data: List[str], provider: str, api_key: str, model: str) -> EmployeeInfo:
+    # Initialize the appropriate LLM based on provider
+    if provider == 'gemini':
+        llm = ChatOpenAI(
+            model=model,
+            base_url=os.getenv("GEMINI_API_BASE_URL"),
+            api_key=api_key,
+        )
+    elif provider == 'groq':
+        llm = ChatOpenAI(
+            model=model,
+            api_key=api_key,
+            base_url = os.getenv("GROQ_API_BASE_URL")
+            
+        )
+    elif provider == 'ollama':
+        llm = ChatOpenAI(
+            model=model,
+            api_key=api_key,
+            base_url = os.getenv("OLLAMA_API_BASE_URL")
+        )
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
+    
     agent = create_agent(
-        model=ChatOpenAI(
-            model="gemini-2.5-flash-lite",
-            base_url=settings.GEMINI_API_BASE_URL,
-            api_key=settings.GEMINI_API_KEY,
-        ),
+        model=llm,
         tools=[],
         response_format=EmployeeInfo,
         system_prompt="""You are an AI assistant that creates professional brag documents from raw input notes, emphasizing achievements, learning, and utilized skills. Follow these instructions:

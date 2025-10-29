@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Brag Document Generator{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     {% if user.is_authenticated %}
     <div class="layout">
@@ -22,6 +25,10 @@
                     <span class="icon">📚</span>
                     <span>History</span>
                 </a>
+                <a href="/about/" class="nav-item">
+                    <span class="icon">ℹ️</span>
+                    <span>About</span>
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <div class="profile">
@@ -35,28 +42,30 @@
             </div>
         </aside>
         <main class="main-content">
-    {% else %}
-    <nav class="top-nav">
-        <div class="container">
-            <h1>Brag Document Generator</h1>
-            <ul>
-                <li><a href="/auth/signin/">Sign In</a></li>
-                <li><a href="/auth/signup/">Sign Up</a></li>
-            </ul>
-        </div>
-    </nav>
-    <main class="container">
-    {% endif %}
-        {% block content %}{% endblock %}
-    </main>
-    {% if user.is_authenticated %}
+            {% else %}
+            <nav class="top-nav">
+                <div class="container">
+                    <h1>Brag Document Generator</h1>
+                    <ul>
+                        {% if request.resolver_match.url_name == 'about' %}
+                        <li><a href="/auth/signin/">Sign In</a></li>
+                        {% else %}
+                        <li><a href="/about/">About</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </nav>
+            <main class="container">
+                {% endif %}
+                {% block content %}{% endblock %}
+            </main>
     </div>
-    {% endif %}
-    
+
     <footer>
         <p>&copy; 2025 Brag Document Generator</p>
     </footer>
-    
+
     {% block scripts %}{% endblock %}
 </body>
+
 </html>

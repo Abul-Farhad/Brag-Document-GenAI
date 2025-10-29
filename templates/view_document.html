@@ -3,7 +3,10 @@
 {% block content %}
 <div class="document-view">
     <div class="document-header">
-        <h2>{{ document.employee_name }} - {{ document.month }}</h2>
+        <div>
+            <h2>{{ document.employee_name }} - {{ document.month }}</h2>
+            <p class="document-timestamp">Generated on {{ document.generated_at|date:"M d, Y \a\t H:i" }}</p>
+        </div>
         <a href="/export/{{ document.id }}/" class="btn-primary">Export as Markdown</a>
     </div>
     

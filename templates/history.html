@@ -1,23 +1,121 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Document History</h2>
+<h2 style="margin-bottom: 1rem;">Document History</h2>
 
 <div class="history-list">
     {% if documents %}
-        {% for doc in documents %}
-        <div class="history-item">
-            <h3>{{ doc.employee_name }}</h3>
-            <p><strong>Month:</strong> {{ doc.month }}</p>
-            <p><strong>Generated:</strong> {{ doc.generated_at|date:"Y-m-d H:i" }}</p>
-            <div class="actions">
+    {% for doc in documents %}
+    <div class="history-item" id="doc-{{ doc.id }}">
+        <h3>{{ doc.employee_name }}</h3>
+        <p><strong>Month:</strong> {{ doc.month }}</p>
+        <p><strong>Generated:</strong> {{ doc.generated_at|date:"M d, Y \a\t H:i" }}</p>
+        <div class="actions">
+            <div>
                 <a href="/document/{{ doc.id }}/" class="btn-secondary">View</a>
                 <a href="/export/{{ doc.id }}/" class="btn-secondary">Export MD</a>
             </div>
+            <button onclick="deleteDocument({{ doc.id }})" class="btn-delete">Delete</button>
         </div>
-        {% endfor %}
+    </div>
+    {% endfor %}
     {% else %}
-        <p>No documents generated yet.</p>
+    <p>No documents generated yet.</p>
     {% endif %}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this document? This action cannot be undone.</p>
+        <div class="modal-actions">
+            <button id="confirmDelete" class="btn-delete">Delete</button>
+            <button onclick="closeDeleteModal()" class="btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let documentToDelete = null;
+
+    function deleteDocument(docId) {
+        documentToDelete = docId;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        documentToDelete = null;
+    }
+
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+        if (!documentToDelete) return;
+
+        try {
+            const response = await fetch(`/delete/${documentToDelete}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Remove the document from the DOM
+                const docElement = document.getElementById(`doc-${documentToDelete}`);
+                if (docElement) {
+                    docElement.style.opacity = '0';
+                    docElement.style.transform = 'translateX(-100%)';
+                    setTimeout(() => {
+                        docElement.remove();
+
+                        // Check if no documents left
+                        const remainingDocs = document.querySelectorAll('.history-item');
+                        if (remainingDocs.length === 0) {
+                            document.querySelector('.history-list').innerHTML = '<p>No documents generated yet.</p>';
+                        }
+                    }, 300);
+                }
+                closeDeleteModal();
+            } else {
+                alert('Error deleting document: ' + data.error);
+            }
+        } catch (error) {
+            alert('Error deleting document: ' + error.message);
+        }
+    });
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        // Fallback: try to get from meta tag
+        if (!cookieValue) {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) {
+                cookieValue = csrfMeta.getAttribute('content');
+            }
+        }
+        return cookieValue;
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('deleteModal').addEventListener('click', (e) => {
+        if (e.target.id === 'deleteModal') {
+            closeDeleteModal();
+        }
+    });
+</script>
 {% endblock %}
